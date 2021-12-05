@@ -45,7 +45,7 @@ void setup_wifi(){  // Start WiFi-Connection
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-    if (strcmp(topic,"gaszaehler/status") == 0) {
+    if (strcmp(topic,"gasmeter/status") == 0) {
       String metercount_str;
       for (uint i = 0; i < length; i++) {
         metercount_str += (char)payload[i];
