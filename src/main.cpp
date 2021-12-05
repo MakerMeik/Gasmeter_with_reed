@@ -20,10 +20,20 @@ IPAddress subnet(255, 255, 255, 0);
 String clientId = "iot-GasReed3";
 
 const unsigned int reed_pin = 3; // GPIO03
-double metercount = 0.00;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// Some of my viewers have pointed out to me that even "double" variables are liable to cause errors over
+// time and will lead to mismatches in the long run. It seems that it is common practice to solve such
+// problems better with integers or unsigned integers. The decimal places are obtained by dividing the 
+// result by 100, as in my case. By the way, I do this on the server side in Node-RED. By the way, you 
+// can also find the corresponding Node-RED flow here on Github.
+
+unsigned int metercount = 0;
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool status = 0; // 0 = nothing  /  1 = pulse = 0.01 m3
 int stat_counter = 0; 
+
 
 void setup_wifi(){  // Start WiFi-Connection
   WiFi.config(ip, gateway, subnet); // comment out if your router assigns the IP address automatically via DHCP
@@ -35,12 +45,12 @@ void setup_wifi(){  // Start WiFi-Connection
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-    if (strcmp(topic,"gaszaehler/stand") == 0) {
+    if (strcmp(topic,"gaszaehler/status") == 0) {
       String metercount_str;
       for (uint i = 0; i < length; i++) {
         metercount_str += (char)payload[i];
       }
-      metercount = metercount_str.toFloat();
+      metercount = metercount_str.toInt();
     }
 }
 
@@ -48,7 +58,7 @@ void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     if (client.connect(clientId.c_str(),mqtt_user,mqtt_pass)) {
-      client.subscribe("gaszaehler/stand");
+      client.subscribe("gasmeter/status");
 
     } else {
       delay(1000);
@@ -94,9 +104,9 @@ void loop() {
           status = digitalRead(reed_pin);   // read the input pin
       } 
     }
-    metercount = metercount + 0.01;
-    client.publish("gaszaehler/pulse", String(metercount).c_str());
-    client.subscribe("gaszaehler/pulse");
+    metercount = metercount + 1;
+    client.publish("gasmeter/pulse", String(metercount).c_str());
+    client.subscribe("gasmeter/pulse");
   }
 
   status = 0;
